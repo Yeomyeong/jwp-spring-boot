@@ -2,30 +2,26 @@ package next.service;
 
 import java.util.List;
 
+import next.repository.QuestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import next.CannotOperateException;
 import next.dao.AnswerDao;
-import next.dao.QuestionDao;
 import next.model.Answer;
 import next.model.Question;
 import next.model.User;
 
 @Service
 public class QnaService {
-	private QuestionDao questionDao;
+	@Autowired
+	private QuestionRepository questionDao;
+	@Autowired
 	private AnswerDao answerDao;
 
-	@Autowired
-	public QnaService(QuestionDao questionDao, AnswerDao answerDao) {
-		this.questionDao = questionDao;
-		this.answerDao = answerDao;
-	}
-
 	public Question findById(long questionId) {
-		return questionDao.findById(questionId);
+		return questionDao.findOne(questionId);
 	}
 
 	public List<Answer> findAllByQuestionId(long questionId) {
@@ -33,7 +29,7 @@ public class QnaService {
 	}
 
 	public void deleteQuestion(long questionId, User user) throws CannotOperateException {
-		Question question = questionDao.findById(questionId);
+		Question question = questionDao.findOne(questionId);
 		if (question == null) {
 			throw new EmptyResultDataAccessException("존재하지 않는 질문입니다.", 1);
 		}
@@ -50,8 +46,8 @@ public class QnaService {
 
 		boolean canDelete = true;
 		for (Answer answer : answers) {
-			String writer = question.getWriter();
-			if (!writer.equals(answer.getWriter())) {
+			User writer = question.getWriter();
+			if (!writer.getUserId().equals(answer.getWriter())) {
 				canDelete = false;
 				break;
 			}
@@ -65,7 +61,7 @@ public class QnaService {
 	}
 
 	public void updateQuestion(long questionId, Question newQuestion, User user) throws CannotOperateException {
-		Question question = questionDao.findById(questionId);
+		Question question = questionDao.findOne(questionId);
         if (question == null) {
         	throw new EmptyResultDataAccessException("존재하지 않는 질문입니다.", 1);
         }
@@ -75,6 +71,6 @@ public class QnaService {
         }
         
         question.update(newQuestion);
-        questionDao.update(question);
+        questionDao.save(question);
 	}
 }

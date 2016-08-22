@@ -5,11 +5,11 @@ import java.util.Map;
 
 import next.CannotOperateException;
 import next.dao.AnswerDao;
-import next.dao.QuestionDao;
 import next.model.Answer;
 import next.model.Question;
 import next.model.Result;
 import next.model.User;
+import next.repository.QuestionRepository;
 import next.service.QnaService;
 
 import org.slf4j.Logger;
@@ -31,7 +31,7 @@ public class ApiQuestionController {
 	private Logger log = LoggerFactory.getLogger(ApiQuestionController.class);
 	
 	@Autowired
-	private QuestionDao questionDao;
+	private QuestionRepository questionRepository;
 	@Autowired
 	private AnswerDao answerDao;
 	@Autowired
@@ -49,7 +49,7 @@ public class ApiQuestionController {
 	
 	@RequestMapping(value = "", method = RequestMethod.GET)
 	public List<Question> list() throws Exception {
-		return questionDao.findAll();
+		return questionRepository.findAll();
 	}
 	
 	@RequestMapping(value = "/{questionId}/answers", method = RequestMethod.POST)
@@ -58,8 +58,11 @@ public class ApiQuestionController {
     	Map<String, Object> values = Maps.newHashMap();
     	Answer answer = new Answer(loginUser.getUserId(), contents, questionId);
     	Answer savedAnswer = answerDao.insert(answer);
-		questionDao.updateCountOfAnswer(savedAnswer.getQuestionId());
-		
+
+		Question question = questionRepository.findOne(savedAnswer.getQuestionId());
+		question.updateCountOfAnswer();
+		questionRepository.save(question);
+
 		values.put("answer", savedAnswer);
 		values.put("result", Result.ok());
 		return values;

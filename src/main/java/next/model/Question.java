@@ -1,11 +1,18 @@
 package next.model;
 
+import javax.persistence.*;
 import java.util.Date;
 
+@Entity
 public class Question {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private long questionId;
 
-	private String writer;
+	@ManyToOne
+	@JoinColumn(foreignKey = @ForeignKey(name = "fk_question_writer"))
+	private User writer;
 
 	private String title;
 
@@ -18,11 +25,11 @@ public class Question {
 	public Question() {
 	}
 
-	public Question(String writer, String title, String contents) {
+	public Question(User writer, String title, String contents) {
 		this(0, writer, title, contents, new Date(), 0);
 	}
 
-	public Question(long questionId, String writer, String title, String contents, Date createdDate,
+	public Question(long questionId, User writer, String title, String contents, Date createdDate,
 			int countOfComment) {
 		this.questionId = questionId;
 		this.writer = writer;
@@ -56,7 +63,7 @@ public class Question {
 		this.contents = contents;
 	}
 
-	public String getWriter() {
+	public User getWriter() {
 		return writer;
 	}
 
@@ -73,7 +80,7 @@ public class Question {
 	}
 	
 	public Question newQuestion(User user) {
-		return new Question(user.getUserId(), title, contents);
+		return new Question(user, title, contents);
 	}
 	
 	public boolean isSameUser(User user) {
@@ -83,6 +90,10 @@ public class Question {
 	public void update(Question newQuestion) {
 		this.title = newQuestion.title;
 		this.contents = newQuestion.contents;
+	}
+
+	public void updateCountOfAnswer() {
+		this.countOfComment ++;
 	}
 
 	@Override
